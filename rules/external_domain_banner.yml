@@ -1,0 +1,14 @@
+name: "External Domain with Warning Banner Rule"
+description: "Detects incoming external emails and applies warning banner"
+type: "rule"
+severity: "medium"
+source: |
+  type.inbound
+  and not sender.email.domain.root_domain in $org_domains
+tags:
+  - "external_sender"
+  - "warning_banner"
+attack_types:
+  - "BEC/Fraud"
+detection_methods:
+  - "Sender analysis"
