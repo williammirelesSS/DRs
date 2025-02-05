@@ -1,0 +1,14 @@
+name: "Attack Score Detection"
+description: "Detects messages based on attack score verdict"
+type: "rule"
+severity: "medium"
+source: |
+  type.inbound
+  and (
+    beta.attack_score().verdict in ("benign", "suspicious", "unknown")
+  )
+tags:
+  - "attack_score"
+  - "triage"
+detection_methods:
+  - "Content analysis"
