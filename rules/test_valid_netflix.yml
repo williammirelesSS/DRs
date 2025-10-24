@@ -1,0 +1,42 @@
+name: "Test Valid - Netflix Impersonation"
+description: "Valid rule from sublime-rules for testing feed sync"
+type: "rule"
+severity: "low"
+source: |
+  type.inbound
+  and (
+    regex.icontains(strings.replace_confusables(sender.display_name), '[nm]etf[li][il]x')
+    or strings.ilevenshtein(strings.replace_confusables(sender.display_name), 'netflix') <= 1
+    or regex.icontains(strings.replace_confusables(sender.email.domain.domain), '[nm]etf[li][il]x')
+    or (
+      (
+        length(recipients.to) == 0
+        or (
+          all(recipients.to, .email.domain.valid == false)
+          and all(recipients.cc, .email.domain.valid == false)
+        )
+      )
+      and any(ml.logo_detect(file.message_screenshot()).brands,
+              .name == "Netflix"
+              and .confidence in ("medium", "high")
+      )
+    )
+  )
+  and sender.email.domain.root_domain not in (
+    'netflix.com',
+    'dvd.com',
+    'netflixfamily.com',
+    'netflix.shop',
+    'netflix.net'
+  )
+  and sender.email.email not in $recipient_emails
+attack_types:
+  - "Credential Phishing"
+tactics_and_techniques:
+  - "Impersonation: Brand"
+  - "Social engineering"
+detection_methods:
+  - "Sender analysis"
+  - "Computer Vision"
+id: "00000000-0000-0000-0000-test00000003"
+

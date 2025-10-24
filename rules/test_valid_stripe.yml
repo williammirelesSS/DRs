@@ -1,0 +1,30 @@
+name: "Test Valid - Stripe Impersonation"
+description: "Valid rule from sublime-rules for testing feed sync"
+type: "rule"
+severity: "high"
+source: |
+  type.inbound
+  and (
+    sender.display_name =~ 'stripe'
+    or strings.replace_confusables(sender.display_name) =~ 'stripe'
+    or strings.ilevenshtein(strings.replace_confusables(sender.display_name), 'stripe') <= 2
+  )
+  and sender.email.domain.root_domain not in~ ('stripe.com')
+  and sender.email.email not in $recipient_emails
+  and not any(headers.hops, any(.fields, .name == "X-Stripe-EID"))
+  and (
+    (
+      sender.email.domain.root_domain in $high_trust_sender_root_domains
+      and not headers.auth_summary.dmarc.pass
+    )
+    or sender.email.domain.root_domain not in $high_trust_sender_root_domains
+  )
+attack_types:
+  - "Credential Phishing"
+tactics_and_techniques:
+  - "Impersonation: Brand"
+  - "Social engineering"
+detection_methods:
+  - "Sender analysis"
+id: "00000000-0000-0000-0000-test00000001"
+
