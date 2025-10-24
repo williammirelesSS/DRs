@@ -1,0 +1,16 @@
+﻿name: "OCR Text in PNG Attachments"
+description: "Detects text content in PNG files using OCR, specifically looking for PDF text"
+type: "rule"
+severity: "mediu"
+source: |
+  type.inboun
+  and any(attachments, 
+      (.file_type in $file_types_images) 
+      and any(file.explode(.), regex.contains(.scan.ocr.raw, '\.pdf'))
+  )
+tags:
+  - "attachment_analysis"
+  - "ocr"
+detection_methods:
+  - "Optical Character Recognition"
+  - "File analysis"
