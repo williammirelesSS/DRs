@@ -1,0 +1,20 @@
+name: "Test Rule - Missing Severity"
+description: "This rule is missing the required severity field"
+type: "rule"
+# severity: "high"  <- MISSING!
+source: |
+  type.inbound
+  and strings.icontains(subject.subject, "test")
+  and (
+    not profile.by_sender().solicited
+    or profile.by_sender().any_messages_malicious_or_spam
+  )
+attack_types:
+  - "Credential Phishing"
+tactics_and_techniques:
+  - "Social engineering"
+detection_methods:
+  - "Content analysis"
+  - "Sender analysis"
+id: "00000000-0000-0000-0000-000000000001"
+

@@ -1,0 +1,22 @@
+name: "Test Rule - Misspelled Severity"
+description: "This rule has severity misspelled as 'meduim'"
+type: "rule"
+severity: "meduim"  # <- MISSPELLED! Should be "medium"
+source: |
+  type.inbound
+  and any(body.links,
+          .href_url.domain.root_domain not in $tranco_1m
+  )
+  and (
+    profile.by_sender().prevalence in ("new", "outlier")
+    or profile.by_sender().any_messages_malicious_or_spam
+  )
+attack_types:
+  - "Credential Phishing"
+tactics_and_techniques:
+  - "Social engineering"
+detection_methods:
+  - "URL analysis"
+  - "Sender analysis"
+id: "00000000-0000-0000-0000-000000000002"
+

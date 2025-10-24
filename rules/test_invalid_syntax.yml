@@ -1,0 +1,22 @@
+name: "Test Rule - Invalid MQL Syntax"
+description: "This rule has invalid MQL syntax in the source"
+type: "rule"
+severity: "high"
+source: |
+  type.inbound
+  and strings.icontains(subject.subject, "test"
+  # <- SYNTAX ERROR: Missing closing parenthesis above
+  and any(body.links,
+          .invalid_field_that_doesnt_exist == "test"
+  )
+  # <- ANOTHER ERROR: Using non-existent field
+  and profile.by_sender().prevalence in ("new", "outlier")
+attack_types:
+  - "Credential Phishing"
+tactics_and_techniques:
+  - "Social engineering"
+detection_methods:
+  - "Content analysis"
+  - "Sender analysis"
+id: "00000000-0000-0000-0000-000000000003"
+
