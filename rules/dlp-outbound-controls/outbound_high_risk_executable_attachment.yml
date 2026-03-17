@@ -13,11 +13,6 @@ severity: "high"
 source: |
   type.outbound
 
-  // at least one external recipient
-  and any(recipients.to,
-          .email.domain.root_domain not in $org_domains
-  )
-
   // high-risk file extension directly attached
   and any(attachments,
           .file_extension in~ (

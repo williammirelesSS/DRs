@@ -12,11 +12,6 @@ severity: "medium"
 source: |
   type.outbound
 
-  // at least one external recipient
-  and any(recipients.to,
-          .email.domain.root_domain not in $org_domains
-  )
-
   // archive attachment that is encrypted / password-protected
   and any(attachments,
           (
