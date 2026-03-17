@@ -1,4 +1,4 @@
-name: "DLP/ATO: Outbound risky attachment to personal or freemail address"
+name: "DLP: Outbound risky attachment to personal or freemail address"
 description: |
   Detects outbound messages carrying high-risk executables, scripts, or
   encrypted archives sent to personal / free email providers (Gmail, Yahoo,

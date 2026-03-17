@@ -1,4 +1,4 @@
-name: "DLP/ATO: Outbound encrypted archive (uninspectable payload)"
+name: "DLP: Outbound encrypted archive (uninspectable payload)"
 description: |
   Detects outbound messages carrying password-protected / encrypted archive
   attachments to external recipients. Encrypted archives are a standard payload

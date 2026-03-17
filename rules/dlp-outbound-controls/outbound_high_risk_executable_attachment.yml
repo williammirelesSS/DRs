@@ -1,4 +1,4 @@
-name: "DLP/ATO: Outbound high-risk executable or script attachment"
+name: "DLP: Outbound high-risk executable or script attachment"
 description: |
   Detects outbound messages carrying high-risk executable or script file types
   to external recipients. These file extensions have no legitimate business use

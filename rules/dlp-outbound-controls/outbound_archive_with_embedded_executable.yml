@@ -1,4 +1,4 @@
-name: "DLP/ATO: Outbound archive containing embedded executable"
+name: "DLP: Outbound archive containing embedded executable"
 description: |
   Recursively scans outbound archive attachments (ZIP, RAR, 7z, etc.) for
   embedded PE executables identified by their MZ file header (YARA: mz_file).
