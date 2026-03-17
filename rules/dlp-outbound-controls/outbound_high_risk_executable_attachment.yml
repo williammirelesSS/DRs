@@ -1,0 +1,49 @@
+name: "DLP/ATO: Outbound high-risk executable or script attachment"
+description: |
+  Detects outbound messages carrying high-risk executable or script file types
+  to external recipients. These file extensions have no legitimate business use
+  in email and are a primary indicator of either a compromised account delivering
+  malware payloads, or an insider accidentally (or intentionally) exfiltrating
+  dangerous files.
+
+  Covers the standard "file blocking profile" list: PE executables, disk images,
+  Windows scripts, PowerShell, shortcut files, and Java archives.
+type: "rule"
+severity: "high"
+source: |
+  type.outbound
+
+  // at least one external recipient
+  and any(recipients.to,
+          .email.domain.root_domain not in $org_domains
+  )
+
+  // high-risk file extension directly attached
+  and any(attachments,
+          .file_extension in~ (
+            // PE / installers
+            "exe", "dll", "scr", "msi", "msp", "mst",
+            // disk images (malware often delivered as ISO)
+            "iso", "img", "vhd", "vmdk",
+            // Windows script formats
+            "vbs", "vbe", "js", "jse", "wsf", "wsh", "hta",
+            // shell / batch
+            "bat", "cmd", "com", "pif",
+            // PowerShell
+            "ps1", "psm1", "psc1", "ps2",
+            // shortcuts / LNK (common in malware campaigns)
+            "lnk",
+            // Java
+            "jar"
+          )
+  )
+
+attack_types:
+  - "Malware/Ransomware"
+tactics_and_techniques:
+  - "Evasion"
+  - "Scripting"
+detection_methods:
+  - "File analysis"
+  - "Content analysis"
+id: "a1b2c3d4-0001-4f6a-9000-outbound00001"

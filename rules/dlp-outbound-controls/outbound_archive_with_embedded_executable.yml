@@ -1,0 +1,43 @@
+name: "DLP/ATO: Outbound archive containing embedded executable"
+description: |
+  Recursively scans outbound archive attachments (ZIP, RAR, 7z, etc.) for
+  embedded PE executables identified by their MZ file header (YARA: mz_file).
+
+  This mirrors the technique used in spear-phishing campaigns where a malicious
+  actor — or a compromised internal account — disguises a .exe inside an archive
+  with a double extension (e.g., Report.pdf.exe) to evade basic attachment scanning.
+  This rule catches that pattern even when the extension is spoofed.
+type: "rule"
+severity: "high"
+source: |
+  type.outbound
+
+  // at least one external recipient
+  and any(recipients.to,
+          .email.domain.root_domain not in $org_domains
+  )
+
+  // archive attachment that, when exploded, contains an MZ (PE) executable
+  and any(attachments,
+          (
+            .file_extension in~ $file_extensions_common_archives
+            or .file_type == "rar"
+          )
+          and any(file.explode(.),
+                  // MZ magic bytes = Windows PE/executable
+                  any(.flavors.yara, . == "mz_file")
+                  // ensure it's a binary application file, not a text match
+                  and strings.starts_with(.flavors.mime, "application")
+          )
+  )
+
+attack_types:
+  - "Malware/Ransomware"
+tactics_and_techniques:
+  - "Evasion"
+  - "Scripting"
+detection_methods:
+  - "Archive analysis"
+  - "File analysis"
+  - "YARA"
+id: "a1b2c3d4-0002-4f6a-9000-outbound00002"

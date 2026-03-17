@@ -1,0 +1,70 @@
+name: "DLP/ATO: Outbound risky attachment to personal or freemail address"
+description: |
+  Detects outbound messages carrying high-risk executables, scripts, or
+  encrypted archives sent to personal / free email providers (Gmail, Yahoo,
+  Proton, etc.).
+
+  This pattern covers two distinct insider-risk and ATO scenarios:
+    1. An employee exfiltrating executables or sensitive tooling to a personal
+       inbox (classic insider data theft).
+    2. A compromised internal account forwarding malware payloads to an
+       attacker-controlled freemail address for staging or C2 delivery.
+
+  Combining freemail recipient AND high-risk payload significantly reduces
+  false-positive rate versus either signal alone.
+type: "rule"
+severity: "high"
+source: |
+  type.outbound
+
+  // recipient is a personal / freemail provider
+  and any(recipients.to,
+          .email.domain.root_domain in $free_email_providers
+  )
+
+  // carries a risky attachment
+  and any(attachments,
+
+          // direct high-risk extension
+          .file_extension in~ (
+            "exe", "dll", "scr", "msi", "iso", "img",
+            "vbs", "vbe", "js", "jse", "hta",
+            "bat", "cmd", "ps1", "lnk", "jar"
+          )
+
+          // OR: archive containing a PE executable
+          or (
+            (
+              .file_extension in~ $file_extensions_common_archives
+              or .file_type == "rar"
+            )
+            and any(file.explode(.),
+                    any(.flavors.yara, . == "mz_file")
+                    and strings.starts_with(.flavors.mime, "application")
+            )
+          )
+
+          // OR: encrypted archive (uninspectable payload)
+          or (
+            (
+              .file_type == "zip"
+              or .file_extension in~ ("zip", "7z", "rar")
+            )
+            and any(file.explode(.),
+                    any(.flavors.yara, . == "encrypted_zip")
+            )
+          )
+  )
+
+attack_types:
+  - "Malware/Ransomware"
+tactics_and_techniques:
+  - "Evasion"
+  - "Encryption"
+  - "Free email provider"
+detection_methods:
+  - "Archive analysis"
+  - "File analysis"
+  - "Sender analysis"
+  - "YARA"
+id: "a1b2c3d4-0004-4f6a-9000-outbound00004"

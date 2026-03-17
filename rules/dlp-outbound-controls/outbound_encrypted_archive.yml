@@ -1,0 +1,40 @@
+name: "DLP/ATO: Outbound encrypted archive (uninspectable payload)"
+description: |
+  Detects outbound messages carrying password-protected / encrypted archive
+  attachments to external recipients. Encrypted archives are a standard payload
+  obfuscation technique: because the contents cannot be statically scanned, they
+  are used by attackers — and compromised accounts — to bypass content inspection.
+
+  Legitimate business use of encrypted archives outbound is rare; organisations
+  with a real need should enforce this as an exception, not the default.
+type: "rule"
+severity: "medium"
+source: |
+  type.outbound
+
+  // at least one external recipient
+  and any(recipients.to,
+          .email.domain.root_domain not in $org_domains
+  )
+
+  // archive attachment that is encrypted / password-protected
+  and any(attachments,
+          (
+            .file_type == "zip"
+            or .file_extension in~ ("zip", "7z", "rar")
+          )
+          and any(file.explode(.),
+                  any(.flavors.yara, . == "encrypted_zip")
+          )
+  )
+
+attack_types:
+  - "Malware/Ransomware"
+tactics_and_techniques:
+  - "Evasion"
+  - "Encryption"
+detection_methods:
+  - "Archive analysis"
+  - "File analysis"
+  - "YARA"
+id: "a1b2c3d4-0003-4f6a-9000-outbound00003"
