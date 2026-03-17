@@ -1,0 +1,9 @@
+name: "Auto-quarantine: Malicious flagged messages"
+description: "Automatically quarantines inbound messages flagged with a malicious attack score verdict."
+type: "triage_rule"
+triage_flagged_messages: true
+default_actions:
+  - "quarantine_message"
+source: |
+  type.inbound
+  and ml.attack_score().verdict == "malicious"

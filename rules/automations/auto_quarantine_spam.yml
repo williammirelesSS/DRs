@@ -1,0 +1,9 @@
+name: "Auto-quarantine: Spam flagged messages"
+description: "Automatically moves inbound messages with a spam attack score verdict to the spam/junk folder."
+type: "triage_rule"
+triage_flagged_messages: true
+default_actions:
+  - "move_to_spam"
+source: |
+  type.inbound
+  and ml.attack_score().verdict == "spam"

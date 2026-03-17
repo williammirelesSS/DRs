@@ -1,0 +1,28 @@
+name: "Exclusion: Common phishing simulation platforms"
+description: |
+  Excludes messages from well-known phishing simulation and awareness training
+  platforms (KnowBe4, Cofense, Proofpoint, Hoxhunt, NINJIO, Terranova).
+  Prevents false positives on simulated phishing tests.
+type: "exclusion"
+source: |
+  type.inbound
+  and (
+    sender.email.domain.root_domain in (
+      "knowbe4.com",
+      "cofense.com",
+      "proofpoint.com",
+      "hoxhunt.com",
+      "ninjio.com",
+      "terranovaglobal.com",
+      "phishingbox.com",
+      "phishingfrenzy.com"
+    )
+    or any(headers.hops,
+           any(.fields,
+               strings.ilike(.name, "X-PHISH*")
+               or strings.ilike(.name, "X-PhishTest*")
+               or strings.ilike(.name, "X-SimulatedPhish*")
+               or strings.ilike(.name, "X-Phishme*")
+           )
+    )
+  )
