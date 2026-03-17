@@ -12,7 +12,7 @@ description: |
 
   Combining freemail recipient AND high-risk payload significantly reduces
   false-positive rate versus either signal alone.
-type: "rule"
+type: "dlp"
 severity: "high"
 source: |
   type.outbound
@@ -56,15 +56,8 @@ source: |
           )
   )
 
-attack_types:
-  - "Malware/Ransomware"
-tactics_and_techniques:
-  - "Evasion"
-  - "Encryption"
-  - "Free email provider"
 detection_methods:
   - "Archive analysis"
   - "File analysis"
   - "Sender analysis"
   - "YARA"
-id: "a1b2c3d4-0004-4f6a-9000-outbound00004"

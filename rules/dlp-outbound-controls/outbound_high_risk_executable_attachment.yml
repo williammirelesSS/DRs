@@ -8,7 +8,7 @@ description: |
 
   Covers the standard "file blocking profile" list: PE executables, disk images,
   Windows scripts, PowerShell, shortcut files, and Java archives.
-type: "rule"
+type: "dlp"
 severity: "high"
 source: |
   type.outbound
@@ -38,12 +38,6 @@ source: |
           )
   )
 
-attack_types:
-  - "Malware/Ransomware"
-tactics_and_techniques:
-  - "Evasion"
-  - "Scripting"
 detection_methods:
   - "File analysis"
   - "Content analysis"
-id: "a1b2c3d4-0001-4f6a-9000-outbound00001"

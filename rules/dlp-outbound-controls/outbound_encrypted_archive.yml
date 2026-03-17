@@ -7,7 +7,7 @@ description: |
 
   Legitimate business use of encrypted archives outbound is rare; organisations
   with a real need should enforce this as an exception, not the default.
-type: "rule"
+type: "dlp"
 severity: "medium"
 source: |
   type.outbound
@@ -28,13 +28,7 @@ source: |
           )
   )
 
-attack_types:
-  - "Malware/Ransomware"
-tactics_and_techniques:
-  - "Evasion"
-  - "Encryption"
 detection_methods:
   - "Archive analysis"
   - "File analysis"
   - "YARA"
-id: "a1b2c3d4-0003-4f6a-9000-outbound00003"

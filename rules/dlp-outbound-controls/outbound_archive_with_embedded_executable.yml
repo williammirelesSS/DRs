@@ -7,7 +7,7 @@ description: |
   actor — or a compromised internal account — disguises a .exe inside an archive
   with a double extension (e.g., Report.pdf.exe) to evade basic attachment scanning.
   This rule catches that pattern even when the extension is spoofed.
-type: "rule"
+type: "dlp"
 severity: "high"
 source: |
   type.outbound
@@ -31,13 +31,7 @@ source: |
           )
   )
 
-attack_types:
-  - "Malware/Ransomware"
-tactics_and_techniques:
-  - "Evasion"
-  - "Scripting"
 detection_methods:
   - "Archive analysis"
   - "File analysis"
   - "YARA"
-id: "a1b2c3d4-0002-4f6a-9000-outbound00002"
