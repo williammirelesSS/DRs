@@ -1,0 +1,33 @@
+name: "Service Abuse: Xero infrastructure used for credential phishing"
+description: |
+  Hunts for messages sent via Xero's legitimate sending infrastructure that contain
+  external links pointing to suspicious domains. Attackers abuse Xero's trusted
+  sender reputation to deliver credential phishing payloads that bypass email gateways.
+
+  What to look for in results: external links going to newly registered domains,
+  free file hosts, or URL shorteners -- not xero.com.
+type: "hunt"
+tier: "service-abuse"
+visibility: "private"
+tags: ["service-abuse", "xero", "credential-phishing", "trusted-infrastructure"]
+suggested_lookback_days: 30
+fp_notes: "Legitimate Xero invoices will match -- review link destinations carefully"
+source: |
+  type.inbound
+  and (
+    sender.email.email == "messaging-service@post.xero.com"
+    or sender.email.domain.root_domain == "xero.com"
+  )
+  and any(filter(body.links,
+                 .href_url.domain.root_domain not in (
+                   "xero.com",
+                   "xero.co.nz",
+                   "xero.co.uk"
+                 )
+                 and .href_url.domain.root_domain not in $org_domains
+          ),
+          network.whois(.href_url.domain).days_old <= 30
+          or .href_url.domain.root_domain in $free_file_hosts
+          or .href_url.domain.root_domain in $url_shorteners
+          or .href_url.domain.root_domain in $free_subdomain_hosts
+  )

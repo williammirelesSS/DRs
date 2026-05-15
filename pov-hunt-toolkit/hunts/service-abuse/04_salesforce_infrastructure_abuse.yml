@@ -1,0 +1,38 @@
+name: "Service Abuse: Salesforce infrastructure used for phishing"
+description: |
+  Hunts for credential phishing messages that abuse Salesforce's sending infrastructure.
+  These messages come from salesforce.com return paths (to pass SPF) while using custom
+  From domains. External links in the message lead to non-Salesforce domains.
+
+  Real-world pattern: attackers create free Salesforce orgs, configure email templates,
+  and use Salesforce's trusted IP ranges to deliver phishing at scale.
+type: "hunt"
+tier: "service-abuse"
+visibility: "private"
+tags: ["service-abuse", "salesforce", "trusted-infrastructure", "credential-phishing"]
+suggested_lookback_days: 30
+fp_notes: "Legitimate Salesforce CRM notification emails will match -- validate link destinations"
+source: |
+  type.inbound
+  and headers.return_path.domain.root_domain == "salesforce.com"
+  and length(attachments) == 0
+  and any(filter(body.links,
+                 .href_url.domain.root_domain not in (
+                   "salesforce.com",
+                   "force.com",
+                   "site.com",
+                   "agentforce.com",
+                   "salesforceliveagent.com"
+                 )
+                 and .href_url.domain.root_domain not in $org_domains
+          ),
+          network.whois(.href_url.domain).days_old <= 60
+          or .href_url.domain.root_domain in $free_file_hosts
+          or .href_url.domain.root_domain in $url_shorteners
+  )
+  and (
+    any(ml.nlu_classifier(body.current_thread.text).intents,
+        .name in ("cred_theft", "urgency") and .confidence in ("medium", "high")
+    )
+    or not profile.by_sender().solicited
+  )

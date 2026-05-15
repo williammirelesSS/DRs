@@ -1,0 +1,32 @@
+name: "Service Abuse: Google Cloud Application Integration sending authenticated phishing"
+description: |
+  Hunts for phishing messages sent via Google Cloud Application Integration
+  (noreply-application-integration@google.com). This is a documented attack technique
+  where attackers use Google Cloud's Application Integration platform to send
+  authenticated emails that pass all SPF/DKIM/DMARC checks.
+
+  The actual phishing payload is usually hosted on Google Cloud Storage
+  (storage.cloud.google.com) -- a free file host -- often as a captcha.html lure page.
+  The sender appears fully legitimate because it IS Google infrastructure.
+type: "hunt"
+tier: "service-abuse"
+visibility: "private"
+tags: ["service-abuse", "google", "google-cloud", "authenticated-phishing", "captcha-lure", "free-file-host"]
+suggested_lookback_days: 30
+fp_notes: "Very rare FPs -- legitimate Google App Integration emails are uncommon in most environments"
+source: |
+  type.inbound
+  and (
+    sender.email.email == "noreply-application-integration@google.com"
+    or sender.email.domain.domain == "google.com"
+  )
+  and (
+    any(body.links,
+        .href_url.domain.root_domain in $free_file_hosts
+        or strings.icontains(.href_url.domain.domain, "storage.cloud.google.com")
+    )
+    or any(body.links,
+           strings.iends_with(.href_url.path, "captcha.html")
+           or strings.icontains(.href_url.path, "captcha")
+    )
+  )

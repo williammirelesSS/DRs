@@ -1,0 +1,40 @@
+name: "Social Engineering: Hate mail, harassment, and threatening messages"
+description: |
+  Hunts for hate mail, harassment, discriminatory content, and threatening messages
+  sent to organisational mailboxes. Includes targeted harassment of executives,
+  politically motivated threats, and anonymous abuse directed at individuals or
+  the organisation.
+
+  Useful for HR investigations, executive protection reviews, and compliance audits
+  where evidence of targeted harassment needs to be surfaced.
+type: "hunt"
+tier: "social-engineering"
+visibility: "private"
+tags: ["hate-mail", "harassment", "threats", "abuse", "executive-protection"]
+suggested_lookback_days: 90
+fp_notes: "Review results carefully — some customer service complaints may match; focus on pattern + sender context"
+source: |
+  type.inbound
+  and not profile.by_sender().solicited
+  and (
+    // Explicit threats
+    regex.icontains(body.current_thread.text,
+      "(kill you|you will die|i will find you|you are dead|watch your back|bomb threat|shooting|hurt you|harm you|come for you|make you pay)"
+    )
+    // Discriminatory abuse
+    or regex.icontains(body.current_thread.text,
+      "(you filthy|you disgusting|go back to|your kind|scum|vermin|you deserve|i hate you|rot in|burn in)"
+    )
+    // Doxxing / stalking signals
+    or regex.icontains(body.current_thread.text,
+      "(i know where you live|i know your address|i know your home|been watching you|following you|your car|your family)"
+    )
+    // Harassment campaign signals (repeated contact, escalation)
+    or (
+      profile.by_sender().prevalence in ("new", "outlier")
+      and regex.icontains(subject.subject,
+        "(urgent warning|last warning|final notice|you have been warned)"
+      )
+      and length(body.current_thread.text) < 800
+    )
+  )

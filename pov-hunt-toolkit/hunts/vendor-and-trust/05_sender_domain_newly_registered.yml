@@ -1,0 +1,25 @@
+name: "Vendor Risk: Any inbound from newly registered sender domain (<30 days)"
+description: |
+  Broad hunt surfacing all inbound emails from domains registered within the
+  last 30 days. Newly registered domains are a strong early-warning signal for
+  BEC, phishing campaigns, and vendor impersonation attacks.
+
+  Use this as a quick "new domain activity" sweep at the start of a POV.
+  Results give you a list of all newly registered domains that have emailed
+  the organisation — each one deserves a quick review.
+
+  Combined with profile signals to reduce noise from legitimate new vendors
+  who have already established a relationship.
+type: "hunt"
+tier: "vendor-and-trust"
+visibility: "private"
+tags: ["new-domain", "domain-age", "broad-sweep", "threat-landscape"]
+suggested_lookback_days: 30
+fp_notes: "Newly formed vendor relationships will appear — cross-reference with known vendor list. Focus on domains < 7 days for highest priority."
+source: |
+  type.inbound
+  and network.whois(sender.email.domain).days_old < 30
+  and not profile.by_sender().solicited
+  and not profile.by_sender().any_messages_benign
+  and sender.email.domain.root_domain not in $org_domains
+  and sender.email.domain.root_domain not in $high_trust_sender_root_domains

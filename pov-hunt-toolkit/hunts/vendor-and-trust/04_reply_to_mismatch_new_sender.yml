@@ -1,0 +1,33 @@
+name: "Vendor Risk: Reply-to mismatch from new sender"
+description: |
+  Hunts for emails where the Reply-To domain is different from the From domain,
+  combined with a new or unsolicited sender. Reply-To hijacking is the most
+  reliable BEC and vendor impersonation signal: the email appears to come from
+  a trusted domain but all replies go to the attacker's address.
+
+  Examples:
+  - From: ceo@realcompany.com  Reply-To: ceo@gmaildomain.net
+  - From: invoices@supplier.com  Reply-To: invoices@supplierr.net (typosquat)
+  - From: accounts@vendor.com  Reply-To: accounts@protonmail.com
+
+  Frequently seen in BEC pre-attack reconnaissance: attacker sends an innocuous
+  first email to establish the reply-to relationship before the fraud request.
+type: "hunt"
+tier: "vendor-and-trust"
+visibility: "private"
+tags: ["bec", "reply-to-mismatch", "vendor-impersonation", "account-takeover"]
+suggested_lookback_days: 30
+fp_notes: "Legitimate marketing automation tools sometimes use reply-to mismatch — check if sender domain is known/trusted"
+source: |
+  type.inbound
+  and profile.by_sender().prevalence in ("new", "outlier")
+  and not profile.by_sender().solicited
+  and length(headers.reply_to) > 0
+  and any(headers.reply_to,
+          .email.domain.root_domain != sender.email.domain.root_domain
+  )
+  and sender.email.domain.root_domain not in $org_domains
+  and not (
+    sender.email.domain.root_domain in $high_trust_sender_root_domains
+    and headers.auth_summary.dmarc.pass
+  )

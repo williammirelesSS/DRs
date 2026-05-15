@@ -1,0 +1,37 @@
+name: "Vendor Risk: Typosquatted or lookalike domain impersonating a sender"
+description: |
+  Hunts for emails where the link domain is suspiciously similar to the sender's
+  domain — a typosquatting or lookalike attack. Uses Levenshtein edit distance
+  to detect near-identical domains (e.g. microsofft.com, paypa1.com, goggle.com).
+
+  This pattern catches both vendor impersonation (attacker registers a lookalike
+  of a supplier domain) and link-based attacks (link points to a lookalike of
+  the sender's domain to trick recipients).
+
+  Combined with NLU financial/BEC intent to reduce noise.
+type: "hunt"
+tier: "vendor-and-trust"
+visibility: "private"
+tags: ["typosquatting", "lookalike-domain", "vendor-impersonation", "bec", "new-domain"]
+suggested_lookback_days: 30
+fp_notes: "Related companies with similar names may match — review link domains manually"
+source: |
+  type.inbound
+  and sender.email.domain.root_domain != "onmicrosoft.com"
+  and not profile.by_sender().solicited
+  and any(body.links,
+          length(.href_url.domain.sld) > 3
+          and 0 < strings.levenshtein(.href_url.domain.sld, sender.email.domain.sld) <= 2
+          and (
+            network.whois(.href_url.domain).days_old <= 200
+            or network.whois(sender.email.domain).days_old <= 200
+          )
+  )
+  and (
+    any(ml.nlu_classifier(body.current_thread.text).intents,
+        .name in ("bec", "cred_theft", "payment") and .confidence in ("medium", "high")
+    )
+    or any(ml.nlu_classifier(body.current_thread.text).entities,
+           .name == "financial" and .text in ("invoice", "banking information", "payment")
+    )
+  )
