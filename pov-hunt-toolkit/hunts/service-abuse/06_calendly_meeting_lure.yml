@@ -1,0 +1,50 @@
+name: "Service Abuse: Calendly scheduling link as social engineering lure"
+description: |
+  Hunts for emails from new/unsolicited senders that use a legitimate Calendly booking
+  link as a lure to establish contact. The email itself is benign -- the malicious
+  payload is delivered after the victim joins the meeting (fake audio issue, malware download).
+
+  This pattern evades traditional email security: Calendly is a trusted domain,
+  the body has no malicious links or attachments, and the sender often uses a
+  Google Workspace trial (passes all auth checks).
+
+  Common pretexts: fake recruiter, investor, vendor demo, IT support.
+  Requires N-of scoring -- no single signal is definitive.
+type: "hunt"
+tier: "service-abuse"
+visibility: "private"
+tags: ["service-abuse", "calendly", "meeting-lure", "social-engineering", "fake-recruiter", "contagious-interview"]
+suggested_lookback_days: 30
+fp_notes: "Will match legitimate cold outreach -- review sender domain age and whether the body references prior contact"
+source: |
+  type.inbound
+  and profile.by_sender().prevalence in ("new", "outlier")
+  and not profile.by_sender().solicited
+  and any(body.links,
+          .href_url.domain.root_domain in $social_landing_hosts
+          or .href_url.domain.root_domain in (
+            "calendly.com",
+            "cal.com",
+            "tidycal.com",
+            "savvycal.com",
+            "zcal.co",
+            "lemcal.com"
+          )
+  )
+  and 2 of (
+    length(body.current_thread.text) < 500,
+    regex.icontains(body.current_thread.text,
+                    "looking forward|quick call|catch up|connect|reach out|opportunity|interview|excited|partnership|collaboration|following up|linkedin"
+    ),
+    regex.icontains(subject.subject,
+                    "^(quick|brief)?.?(chat|call|meeting|intro|opportunity|connect|discussion)"
+    ),
+    network.whois(sender.email.domain).days_old < 90,
+    sender.email.domain.root_domain in $free_email_providers,
+    length(body.links) <= 2
+  )
+  and not (
+    sender.email.domain.root_domain in ("calendly.com", "cal.com")
+    and headers.auth_summary.dmarc.pass
+  )
+  and not subject.is_reply

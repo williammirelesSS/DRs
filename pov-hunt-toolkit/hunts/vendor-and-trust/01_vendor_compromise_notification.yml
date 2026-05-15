@@ -1,0 +1,51 @@
+name: "Vendor Risk: Vendor notifying of their own compromise or breach"
+description: |
+  Hunts for emails where a vendor or external sender has notified the organisation
+  that their own systems, accounts, or email was compromised. These are critical
+  vendor risk signals: the vendor may have sent malicious emails from their
+  compromised account before notifying you.
+
+  Key phrases: "we were hacked", "do not click any links", "that was not me/us",
+  "please disregard our previous email", "our account was compromised".
+
+  These emails are rare but gold when found. Useful for:
+  - Vendor risk audits and procurement security reviews
+  - Retroactive investigation (was the compromised vendor sending suspicious emails?)
+  - Demonstrating Sublime's value for vendor intelligence (vs pure inbound threat blocking)
+type: "hunt"
+tier: "vendor-and-trust"
+visibility: "private"
+tags: ["vendor-risk", "vendor-compromise", "breach-notification", "incident-response", "intelligence"]
+suggested_lookback_days: 90
+fp_notes: "Very low FP rate — these phrases are highly specific to vendor compromise notifications"
+source: |
+  type.inbound
+  and (
+    regex.icontains(body.current_thread.text,
+      "(?:we|our|my|i).{0,30}(?:were|was|have been|has been|got).{0,20}(?:hacked|breached|compromised|attacked|phished)"
+    )
+    or regex.icontains(body.current_thread.text,
+      "(?:that|this).{0,30}(?:was|were|did).{0,20}not.{0,15}(?:from|sent by|me|us|our)"
+    )
+    or regex.icontains(body.current_thread.text,
+      "(?:do not|don't|please do not|please don't).{0,20}(?:click|open|respond|reply|download).{0,30}(?:link|email|attachment|message)"
+    )
+    or regex.icontains(body.current_thread.text,
+      "(?:please |kindly )?(?:disregard|ignore|delete).{0,30}(?:previous|last|prior|earlier|recent).{0,20}(?:email|message)"
+    )
+    or strings.ilike(body.current_thread.text,
+      "*i was hacked*",
+      "*we were hacked*",
+      "*we have been hacked*",
+      "*our account was hacked*",
+      "*our email was compromised*",
+      "*do not click any links*",
+      "*don't click any links*",
+      "*that was not me*",
+      "*that was not from me*",
+      "*we have been breached*",
+      "*security incident*",
+      "*unauthorized access*",
+      "*our account has been compromised*"
+    )
+  )

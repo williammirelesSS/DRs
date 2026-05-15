@@ -1,0 +1,35 @@
+name: "Social Engineering: Backscatter — NDR flood from spoofed domain"
+description: |
+  Hunts for backscatter — non-delivery reports (NDRs) and bounce messages flooding
+  a mailbox because the organisation's domain is being used as a spoofed return path
+  by a third-party spam campaign. The org did NOT send these emails; their domain
+  was forged.
+
+  Backscatter is a strong signal that the org's domain is being actively abused
+  for spam campaigns and may indicate SPF/DMARC misconfiguration.
+
+  High volume of results indicates an ongoing spoofing campaign against the org's domain.
+type: "hunt"
+tier: "social-engineering"
+visibility: "private"
+tags: ["backscatter", "ndr", "bounce", "domain-spoofing", "spam"]
+suggested_lookback_days: 14
+fp_notes: "Any legitimate NDRs from internal send failures will appear — focus on volume spikes from external mail servers"
+source: |
+  type.inbound
+  and (
+    // Classic NDR/bounce signals
+    sender.email.local_part in ("mailer-daemon", "postmaster", "noreply", "no-reply")
+    or strings.ilike(sender.display_name, "*mailer daemon*", "*mail delivery*", "*postmaster*")
+    or strings.ilike(subject.subject,
+      "*undeliverable*", "*delivery failure*", "*delivery status*",
+      "*message not delivered*", "*returned mail*", "*mail delivery failed*",
+      "*bounce*", "*NDR*"
+    )
+  )
+  // Coming from external servers (not our own infrastructure)
+  and sender.email.domain.root_domain not in $org_domains
+  // Contains reference to the org's domain in the bounce body
+  and any($org_domains,
+          strings.icontains(body.current_thread.text, .)
+  )

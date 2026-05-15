@@ -1,0 +1,48 @@
+# POV Hunt Toolkit — Configuration Template
+#
+# Copy this file to config.yaml and fill in your values.
+# You can pass these values via CLI flags instead — this file is optional.
+#
+# Usage:
+#   python3 run_pov_hunts.py --api-key YOUR_KEY --base-url YOUR_URL
+#
+# Or export as environment variables:
+#   export SUBLIME_API_KEY=your_key
+#   export SUBLIME_BASE_URL=https://platform.sublime.security
+
+# ─── Required ────────────────────────────────────────────────────────────────
+
+# Your Sublime Security API key.
+# Generate at: Settings → API Keys → New Key
+# Never commit this file with a real key in it.
+api_key: ""
+
+# Base URL for your tenant.
+# Examples:
+#   US:  https://platform.sublime.security
+#   EU:  https://eu.platform.sublime.security
+#   UK:  https://uk.platform.sublime.security
+base_url: "https://platform.sublime.security"
+
+# ─── Defaults (all overridable via CLI flags) ─────────────────────────────────
+
+# Lookback window in days.
+# 30 is the standard for a POV. Use 60 for a deeper historical sweep.
+default_lookback_days: 30
+
+# Default hunt profile.
+# quick    — graymail only (2-3 min, safe for live demos)
+# standard — graymail + vendor-and-trust (recommended default)
+# deep     — all four categories
+default_profile: "standard"
+
+# Organisation label for report headers.
+# Set this per engagement, e.g. "HSBC", "ITV", "Quantexa"
+org_label: ""
+
+# ─── Optional ────────────────────────────────────────────────────────────────
+
+# Whether to run hunts as private (recommended) or public.
+# Private: visible only to your session / API key
+# Public:  visible to all org admins — only use with explicit customer consent
+private: true

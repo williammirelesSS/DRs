@@ -1,0 +1,28 @@
+name: "Graymail / Threat: Non-English inbound messages"
+description: |
+  Hunts for messages in languages other than English. Useful for organisations
+  that operate exclusively in English and want to surface potential threats
+  or unwanted communications arriving in other languages.
+
+  Use cases:
+  1. Organisations that should only receive English email — non-English = anomaly
+  2. Surfacing regional attack campaigns (e.g. Japanese job scams, German BEC)
+  3. Reviewing whether multilingual graymail is reaching executives
+
+  M365 only — uses the X-Forefront-Antispam-Report header language detection.
+  Will not work on Google Workspace environments.
+type: "hunt"
+tier: "graymail"
+visibility: "private"
+tags: ["non-english", "language-detection", "m365-only", "graymail", "anomaly"]
+suggested_lookback_days: 30
+fp_notes: "For orgs with multilingual employees or international operations, results will be high volume and not meaningful. Only useful for English-only orgs."
+source: |
+  type.inbound
+  and any(headers.hops,
+          any(.fields,
+              .name =~ "X-Forefront-Antispam-Report"
+              and not strings.ilike(.value, "*LANG:en*")
+          )
+  )
+  and not profile.by_sender().solicited

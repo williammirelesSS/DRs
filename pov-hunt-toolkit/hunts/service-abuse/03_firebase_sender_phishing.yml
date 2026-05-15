@@ -1,0 +1,41 @@
+name: "Service Abuse: Google Firebase hosting used for phishing delivery"
+description: |
+  Hunts for phishing messages hosted on Firebase (firebaseapp.com or web.app) domains.
+  Firebase provides free hosting that attackers use to host credential phishing pages.
+  Messages often arrive from unrelated sender domains and link to firebase-hosted payloads.
+
+  Also catches Firebase password reset abuse -- where attackers trigger password reset
+  emails from Firebase-backed apps to social engineer victims.
+type: "hunt"
+tier: "service-abuse"
+visibility: "private"
+tags: ["service-abuse", "firebase", "google", "free-file-host", "credential-phishing"]
+suggested_lookback_days: 30
+fp_notes: "Legitimate app notifications from Firebase may appear -- check intent signals in body"
+source: |
+  type.inbound
+  and (
+    any(body.links,
+        .href_url.domain.root_domain in ("firebaseapp.com", "web.app")
+        and .href_url.domain.subdomain is not null
+        and .href_url.domain.subdomain != "www"
+    )
+    or (
+      sender.email.domain.root_domain == "firebaseapp.com"
+      and not profile.by_sender().solicited
+      and (
+        any(ml.nlu_classifier(body.current_thread.text).intents,
+            .name in ("cred_theft", "urgency")
+            and .confidence in ("medium", "high")
+        )
+        or any(body.links,
+               .href_url.domain.root_domain not in (
+                 "firebaseapp.com",
+                 "google.com",
+                 "googleapis.com"
+               )
+               and network.whois(.href_url.domain).days_old <= 30
+        )
+      )
+    )
+  )
